@@ -1,0 +1,19 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: affed453c183079498aa1173f023e686, type: 3}
+  m_Name: AreaOfEffect
+  m_EditorClassIdentifier: 
+  Speed: 15
+  ExplosionFX: {fileID: 2968319898464559148, guid: 213aa2c5daad1f141911e0a9e469cc38, type: 3}
+  ExplodeOnImpact: 1
+  IsAOE: 0
+  AOERadius: 5

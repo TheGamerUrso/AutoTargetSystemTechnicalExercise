@@ -1,0 +1,16 @@
+using UnityEngine;
+using UnityEngine.UI;
+
+public class HealthUI : MonoBehaviour
+{
+    public EnemyHealth enemyHealth;
+    public Image image;
+    private Color fullHealth = Color.green;
+    private Color zeroHealth = Color.red;
+    void Update()
+    {
+        var healthPercent = enemyHealth.GetHealthPercentage() / 100;
+        image.fillAmount = healthPercent;
+        image.color = Color.Lerp(zeroHealth, fullHealth, healthPercent);
+    }
+}
