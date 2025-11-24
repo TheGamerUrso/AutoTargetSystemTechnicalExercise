@@ -6,10 +6,13 @@ using UnityEngine;
 public class AutoTargetSystem : MonoBehaviour
 {
     public Action<Transform> OnTargetAcquired;
-    private List<Transform> validTargetsList = new List<Transform>();
+    public Transform CurrentTarget { get; private set; }
+    public float SearchRadius => searchRadius;
+
 
     [Header("Configuration")]
     [Header("Target")]
+    [SerializeField] private const float evaluateTargetTime = 0.15f;
     [SerializeField] private float searchRadius = 50f;
     [SerializeField] private LayerMask targetMask;
     [SerializeField] private List<AttackPriorityRuleSO> criteriaList;
@@ -18,13 +21,12 @@ public class AutoTargetSystem : MonoBehaviour
     [SerializeField] private WeaponTypeEnum currentWeaponType = WeaponTypeEnum.Projectile;
     [SerializeField] private float rotateSpeed = 5f;
 
-    public Transform CurrentTarget { get; private set; }
     private Transform previousTarget;
-    public float SearchRadius => searchRadius;
+    private List<Transform> validTargetsList = new List<Transform>();
 
     private Weapon currentActiveWeapon;
     private float evaluateTargetTimer;
-    [SerializeField] private float evaluateTargetTime = 0.15f;
+
 
     //==================================================================================================================================
     private void Awake()

@@ -12,8 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: affed453c183079498aa1173f023e686, type: 3}
   m_Name: AreaOfEffect
   m_EditorClassIdentifier: 
-  Speed: 15
-  ExplosionFX: {fileID: 2968319898464559148, guid: 213aa2c5daad1f141911e0a9e469cc38, type: 3}
+  Speed: 10
+  ExplosionFX: {fileID: 5819641614072369359, guid: 21332d90877a6a44da5d49fe42b864b0, type: 3}
   ExplodeOnImpact: 1
-  IsAOE: 0
+  IsAOE: 1
   AOERadius: 5

@@ -1,23 +1,20 @@
 using UnityEngine;
 
-[CreateAssetMenu(fileName = "newAttack", menuName = "New Attack", order = 1)]
 // Weapon class to handle shooting projectiles
 public class Weapon : MonoBehaviour
 {
-  
-    [Header("Configuration")]
+    private AutoTargetSystem autoTargetSystem;
     // Weapon data scriptable object
     public WeaponSO weaponData;
+    [Header("Configuration")]
+    // Angle threshold to shoot
+    [SerializeField] private float angleThreshold = 30f;
     // Fire point transform
-    [SerializeField] private Transform firePoint;
+    [SerializeField] private Transform attackPoint;
     // Time until next fire
     private float nextFireTime = 0f;
     // Target transform
     private Transform target;
-    // Angle threshold to shoot
-    [SerializeField] private float angleThreshold = 30f;
-    private AutoTargetSystem autoTargetSystem;
-
     //==================================================================================================================================
     private void OnDestroy()
     {
@@ -32,7 +29,11 @@ public class Weapon : MonoBehaviour
     {
         // Find AutoTargetSystem in scene
         autoTargetSystem = GameObject.FindFirstObjectByType<AutoTargetSystem>();
-        if(autoTargetSystem != null)
+        if (autoTargetSystem == null)
+        {
+            Debug.LogWarning("AutoTargetSystem not found in scene.", gameObject);
+        }
+        else
         {
             // Subscribe to OnTargetAcquired event
             autoTargetSystem.OnTargetAcquired += SetTarget;
@@ -41,9 +42,9 @@ public class Weapon : MonoBehaviour
     //==================================================================================================================================
     public void Update()
     {
-        if (target == null) return;
         if (Time.time >= nextFireTime)
-        {     
+        {
+            if (target == null) return;
             Shoot();
             nextFireTime = Time.time + weaponData.FireRate;
         }
@@ -59,8 +60,8 @@ public class Weapon : MonoBehaviour
     public void Shoot()
     {
         var projectileTemp = Instantiate(weaponData.ProjectilePrefab,
-                   firePoint.position,
-                   firePoint.rotation);
+                   attackPoint.position,
+                   attackPoint.rotation);
         projectileTemp.SetTargetPos(target);
     }
 }

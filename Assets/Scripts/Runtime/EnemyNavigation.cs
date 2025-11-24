@@ -12,12 +12,12 @@ public class EnemyNavigation : MonoBehaviour
     private Vector3 wanderAroundPosition;
     private Vector3 wanderPosition;
     private float newWanderPositionTime;
-    
+    //==================================================================================================================================
     private void Awake()
     {
         wanderAroundPosition = transform.position;
     }
-
+    //==================================================================================================================================
     private void Update()
     {
         if (Time.time >= newWanderPositionTime)
@@ -27,7 +27,7 @@ public class EnemyNavigation : MonoBehaviour
         
         MoveTowardsWanderPosition();
     }
-
+    //==================================================================================================================================
     private void MoveTowardsWanderPosition()
     {
         var wanderDirection = (wanderPosition - transform.position).normalized;
@@ -36,13 +36,13 @@ public class EnemyNavigation : MonoBehaviour
             transform.position += wanderDirection.normalized * (MovementSpeed * Time.deltaTime);
         }
     }
-
+    //==================================================================================================================================
     private void SetRandomWanderPosition()
     {
         wanderPosition = GetRandomWanderPosition();
         newWanderPositionTime = Time.time + Random.Range(MinTimeBetweenWanders, MaxTimeBetweenWanders);
     }
-
+    //==================================================================================================================================
     private Vector3 GetRandomWanderPosition()
     {
         var wanderOffset = Random.insideUnitSphere.normalized * Random.Range(MinWanderDistance, MaxWanderDistance);

@@ -1,6 +1,6 @@
 using UnityEngine;
 
-[CreateAssetMenu(fileName = "New Projectile", menuName = "Data/New Projectile")]
+[CreateAssetMenu(fileName = "New Projectile Data", menuName = "Data/New Projectile Data")]
 public class ProjectileSO :ScriptableObject
 {
     [Header("Configuration")]

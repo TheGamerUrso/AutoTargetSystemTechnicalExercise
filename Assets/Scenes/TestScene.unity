@@ -165,8 +165,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   weaponData: {fileID: 11400000, guid: ce4508252700ac14da5c0b4f31402c89, type: 2}
-  firePoint: {fileID: 1742381002}
   angleThreshold: 15
+  attackPoint: {fileID: 1742381002}
 --- !u!1001 &14866841
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -1099,8 +1099,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   weaponData: {fileID: 11400000, guid: b2bb1ef8c44508f43aace7e3e77f5674, type: 2}
-  firePoint: {fileID: 1815569815}
   angleThreshold: 30
+  attackPoint: {fileID: 1815569815}
 --- !u!4 &597868787 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 905048626283898189, guid: 0688bf10071039840877fed76fd5bcf1, type: 3}
@@ -2074,10 +2074,11 @@ MonoBehaviour:
   criteriaList:
   - {fileID: 11400000, guid: 75d4b1ded8d892249a4c67af14ff7b85, type: 2}
   - {fileID: 11400000, guid: 489e2a1f6ca6408408a977d52db3fd3b, type: 2}
-  weaponsList: []
+  weaponsList:
+  - {fileID: 510080340}
+  - {fileID: 3730920}
   currentWeaponType: 0
   rotateSpeed: 1
-  evaluateTargetTime: 0.15
 --- !u!120 &1934791290
 LineRenderer:
   serializedVersion: 2

@@ -4,31 +4,27 @@ public class Projectile : MonoBehaviour
 {
     [Header("Configuration")]
     [SerializeField] private ProjectileSO projectileData;
+    private Rigidbody rigid;
     private Vector3 currentTargetPos;
     //==================================================================================================================================
-    private void Update()
+    private void Awake()
     {
-        Move();
+        rigid = GetComponent<Rigidbody>();
+        if(rigid == null )
+        {
+            Debug.LogWarning("Rigidbody component is missing.",gameObject);
+        }
     }
+    //==================================================================================================================================
+    private void Update() => Move();
     //==================================================================================================================================
     // Move projectile
     public void Move()
     {
-        // AOE projectile move toward target position
-        if (projectileData.IsAOE)
-        {
-            // Move toward target position
-            transform.position = Vector3.MoveTowards(transform.position,
-                   currentTargetPos,
-                   projectileData.Speed * Time.deltaTime);
+        Debug.DrawRay(transform.position, currentTargetPos - transform.position , Color.yellow);
 
-            // Check if reached target position
-            if (Vector3.Distance(transform.position, currentTargetPos) < 0.1f)
-            {
-                Explode();
-            }
-        }
-        else
+        // AOE projectile move toward target position
+        if (!projectileData.IsAOE)
         {
             // Non-AOE projectile move forward
             transform.position += transform.forward *
@@ -40,6 +36,12 @@ public class Projectile : MonoBehaviour
             {
                 Destroy(gameObject);
             }
+        }
+
+        // Check if reached target position
+        if (Vector3.Distance(transform.position, currentTargetPos) < 0.1f)
+        {
+            Explode();
         }
     }
     //==================================================================================================================================
@@ -54,14 +56,13 @@ public class Projectile : MonoBehaviour
             damagable.TakeDamage(10f);
         }
         // Explode on impact if configured
-        if (projectileData.ExplodeOnImpact)
+        if (projectileData.IsAOE)
         {
             DoAOEDamage();
-            Explode();
         }
-        // Destroy projectile
+        //Destroy projectile
         Explode();
-        gameObject.SetActive(false);
+        Destroy(gameObject);
     }
     //==================================================================================================================================
     // Set target position for AOE projectiles

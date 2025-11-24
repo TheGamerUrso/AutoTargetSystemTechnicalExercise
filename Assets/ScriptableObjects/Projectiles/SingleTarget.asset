@@ -12,7 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: affed453c183079498aa1173f023e686, type: 3}
   m_Name: SingleTarget
   m_EditorClassIdentifier: 
-  Speed: 30
+  Speed: 15
   ExplosionFX: {fileID: 9127941804170883935, guid: 943fcf7b00f395443888995e2764e376, type: 3}
   ExplodeOnImpact: 1
+  IsAOE: 0
   AOERadius: 5

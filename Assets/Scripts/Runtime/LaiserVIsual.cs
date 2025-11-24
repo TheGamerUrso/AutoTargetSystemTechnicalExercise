@@ -21,21 +21,20 @@ public class LaiserVIsual : MonoBehaviour
     void Awake()
     {
         // Get required components
-        lineRenderer = GetComponent<LineRenderer>();
-        autoTargetSystem = GetComponent<AutoTargetSystem>();
-        if (autoTargetSystem != null)
-        {
-            autoTargetSystem.OnTargetAcquired += SetTarget;
-            searchRadius = autoTargetSystem.SearchRadius;
-        }
+        lineRenderer = GetComponent<LineRenderer>();   
     }
     //==================================================================================================================================
     private void Start()
     {
         autoTargetSystem = GameObject.FindFirstObjectByType<AutoTargetSystem>();
-        if (autoTargetSystem != null)
+        if (autoTargetSystem == null)
+        {
+            Debug.LogWarning("AutoTargetSystem not found in scene.", gameObject);
+        }
+        else
         {
             autoTargetSystem.OnTargetAcquired += SetTarget;
+            searchRadius = autoTargetSystem.SearchRadius;
         }
     }
     //==================================================================================================================================

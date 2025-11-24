@@ -134,6 +134,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   projectileData: {fileID: 11400000, guid: 0251d3bd260808a499fb617bb8db66de, type: 2}
+  force: 0
+  gravity: -9.8
 --- !u!54 &7879046183162899895
 Rigidbody:
   m_ObjectHideFlags: 0
