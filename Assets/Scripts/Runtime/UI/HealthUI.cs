@@ -1,16 +1,19 @@
 using UnityEngine;
 using UnityEngine.UI;
 
-public class HealthUI : MonoBehaviour
+namespace TheGamerUrso
 {
-    public EnemyHealth enemyHealth;
-    public Image image;
-    private Color fullHealth = Color.green;
-    private Color zeroHealth = Color.red;
-    void Update()
+    public class HealthUI : MonoBehaviour
     {
-        var healthPercent = enemyHealth.HealthPercentage / 100;
-        image.fillAmount = healthPercent;
-        image.color = Color.Lerp(zeroHealth, fullHealth, healthPercent);
+        public EnemyHealth enemyHealth;
+        public Image image;
+        private Color fullHealth = Color.green;
+        private Color zeroHealth = Color.red;
+        void Update()
+        {
+            var healthPercent = enemyHealth.HealthPercentage / 100;
+            image.fillAmount = healthPercent;
+            image.color = Color.Lerp(zeroHealth, fullHealth, healthPercent);
+        }
     }
 }
