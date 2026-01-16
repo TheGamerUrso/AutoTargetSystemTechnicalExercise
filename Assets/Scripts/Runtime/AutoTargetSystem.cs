@@ -1,150 +1,154 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
 
-public class AutoTargetSystem : MonoBehaviour
+namespace TheGamerUrso
 {
-    public Action<Transform> OnTargetAcquired;
-    public Transform CurrentTarget { get; private set; }
-    public float SearchRadius => searchRadius;
-
-
-    [Header("Configuration")]
-    [Header("Target")]
-    [SerializeField] private const float evaluateTargetTime = 0.15f;
-    [SerializeField] private float searchRadius = 50f;
-    [SerializeField] private LayerMask targetMask;
-    [SerializeField] private List<AttackPriorityRuleSO> criteriaList;
-    [Header("Weapoon")]
-    [SerializeField] private Weapon[] weaponsList;
-    [SerializeField] private WeaponTypeEnum currentWeaponType = WeaponTypeEnum.Projectile;
-    [SerializeField] private float rotateSpeed = 5f;
-
-    private Transform previousTarget;
-    private List<Transform> validTargetsList = new List<Transform>();
-
-    private Weapon currentActiveWeapon;
-    private float evaluateTargetTimer;
-
-
-    //==================================================================================================================================
-    private void Awake()
+    public class AutoTargetSystem : MonoBehaviour, ITargetProvider
     {
-        // Initialize weapon
-        SetWeaponType(currentWeaponType);
-    }
-    //==================================================================================================================================
-    private void Update()
-    {
-        evaluateTargetTimer -= Time.deltaTime;
-        // Evaluate targets
-        if (evaluateTargetTimer <= 0)
+        [Header("Target Configuration")]
+        [SerializeField] private float searchRadius = 50f;
+        public float SearchRadius => searchRadius;
+        [SerializeField] private LayerMask targetMask;
+        [SerializeField] private List<AttackPriorityRuleSO> priorityRules;
+
+        [Header("Update Settings")]
+        [SerializeField] private float evaluateTargetInterval = 0.15f;
+
+        [Header("Stability Settings")]
+        [Tooltip("Prefer current target unless new target is significantly better. Prevents thrashing.")]
+        [SerializeField] private bool useTargetRetention = true;
+        [Tooltip("Current target must be this many positions worse to switch (0 = switch immediately)")]
+        [SerializeField][Range(0, 5)] private int retentionThreshold = 2;
+
+        // ITargetProvider implementation
+        public Transform CurrentTarget { get; private set; }
+        public event Action<Transform> OnTargetChanged;
+
+        // Composed components (Dependency on abstractions via composition)
+        private TargetScanner targetScanner;
+        private LineOfSightValidator lineOfSightValidator;
+        private TargetPriorityResolver priorityResolver;
+
+        private float evaluateTargetTimer;
+        private Transform currentTarget;
+        private Transform previousTarget;
+
+        //==================================================================================================================================
+        private void Awake()
         {
-            evaluateTargetTimer = evaluateTargetTime;
-            EvaluateTargets();
+            // Initialize components
+            targetScanner = new TargetScanner(searchRadius, targetMask);
+            lineOfSightValidator = new LineOfSightValidator();
+            priorityResolver = new TargetPriorityResolver(priorityRules);
+
+            // Register this as the ITargetProvider service
+            ServiceLocator.Register<ITargetProvider>(this);
         }
-        // Rotate toward target
-        RotateTowardTarget();
-    }
-    //==================================================================================================================================
-    // Set weapon type
-    public void SetWeaponType(WeaponTypeEnum nextWeaponType)
-    {
-        currentWeaponType = nextWeaponType;
-        foreach (var weap in weaponsList)
+        //==================================================================================================================================
+        private void OnDestroy()
         {
-            weap.gameObject.SetActive(false);
-        }
-        currentActiveWeapon = weaponsList.First(w => w.weaponData.WeaponType == currentWeaponType);
-        currentActiveWeapon.gameObject.SetActive(true);
-    }
-    //==================================================================================================================================
-    // Evaluate targets in radius
-    private void EvaluateTargets()
-    {
-        validTargetsList.Clear();
-
-        // Find targets in radius
-        Collider[] hitColliders = Physics.OverlapSphere(transform.position, searchRadius, targetMask);
-        if (hitColliders.Length == 0)
-        {
-            SetTarget(null);
-            return;
+            //Unregister from ServiceLocator
+            ServiceLocator.Unregister<ITargetProvider>();
         }
 
-        List<Transform> targets = hitColliders.Select(c => c.transform).ToList();
-        // Filter by line of sight
-        foreach (var t in targets)
-        {        
-            if (HasLineOfSight(t))
+        //==================================================================================================================================
+        private void Update()
+        {
+            evaluateTargetTimer -= Time.deltaTime;
+
+            if (evaluateTargetTimer <= 0f)
             {
-                validTargetsList.Add(t);
+                evaluateTargetTimer = evaluateTargetInterval;
+                EvaluateTargets();
             }
         }
 
-        // Apply critiria
-        IOrderedEnumerable<Transform> ordered = null;
-        foreach (var rule in criteriaList)
+        //==================================================================================================================================
+        /// <summary>
+        /// Evaluate and select the best target based on configured rules.
+        /// </summary>
+        private void EvaluateTargets()
         {
-            if (ordered == null)
-                ordered = rule.Apply(gameObject, validTargetsList);
-            else
-                ordered = rule.Apply(gameObject, ordered.ToList());
-        }
+            // Step 1: Scan for potential targets
+            List<Transform> potentialTargets = targetScanner.ScanForTargets(transform.position);
 
-        if (ordered != null)
-            validTargetsList = ordered.ToList();
-
-        // Set current target
-        CurrentTarget = validTargetsList.Count > 0 ? validTargetsList[0] : null;
-
-        // Notify target acquired
-        if (previousTarget != CurrentTarget)
-        {
-            SetTarget(CurrentTarget);
-        }
-        previousTarget = CurrentTarget;
-    }
-    //==================================================================================================================================
-    public void SetTarget(Transform target)
-    {
-        CurrentTarget = target;
-        OnTargetAcquired?.Invoke(CurrentTarget);
-    }
-    //==================================================================================================================================
-    // Check line of sight to target
-    private bool HasLineOfSight(Transform target)
-    {
-        Vector3 origin = transform.position + Vector3.up;
-        Vector3 direction = (target.position - origin);
-        float distance = direction.magnitude;
-        if (Physics.Raycast(origin, direction.normalized, out RaycastHit hit, distance))
-        {
-            Gizmos.color = Color.green;
-            if (hit.transform.GetComponentInParent<IDamagable>() != null)
+            if (potentialTargets.Count == 0)
             {
-                return true;
+                SetTarget(null);
+                return;
+            }
+
+            // Step 2: Filter by line of sight
+            List<Transform> validTargets = new List<Transform>();
+            Vector3 origin = transform.position + Vector3.up;
+
+            foreach (var target in potentialTargets)
+            {
+                if (lineOfSightValidator.HasLineOfSight(origin, target))
+                {
+                    validTargets.Add(target);
+                }
+            }
+
+            if (validTargets.Count == 0)
+            {
+                SetTarget(null);
+                return;
+            }
+
+            // Step 3: Apply priority rules
+            var orderedTargets = priorityResolver.ResolveTargetPriority(gameObject, validTargets);
+
+            // Step 4: Select best target with stability logic
+            currentTarget = orderedTargets[0];
+
+            // Step 5: Notify if target changed
+            if (previousTarget != currentTarget)
+            {
+                SetTarget(currentTarget);
+            }
+
+            previousTarget = currentTarget;
+        }
+        //==================================================================================================================================
+        /// <summary>
+        /// Set the current target and notify subscribers.
+        /// </summary>
+        private void SetTarget(Transform target)
+        {
+            CurrentTarget = target;
+            OnTargetChanged?.Invoke(CurrentTarget);
+        }
+        //==================================================================================================================================
+        private void OnDrawGizmos()
+        {
+            // Visualize search radius
+            Gizmos.color = Color.yellow;
+            Gizmos.DrawWireSphere(transform.position, searchRadius);
+
+            // Show found targets
+            if (Application.isPlaying && targetScanner != null)
+            {
+                var targets = targetScanner.ScanForTargets(transform.position);
+                Gizmos.color = targets.Count > 0 ? Color.green : Color.red;
+                Gizmos.DrawWireSphere(transform.position, searchRadius * 0.95f);
             }
         }
-        return false;
-    }
-    //==================================================================================================================================
-    // Rotate toward current target
-    private void RotateTowardTarget()
-    {
-        if (CurrentTarget == null) return;
-        // Smoothly rotate toward target
-        transform.rotation =
-            Quaternion.Slerp(transform.rotation,
-            Quaternion.LookRotation(CurrentTarget.position - transform.position),
-            rotateSpeed * Time.deltaTime * 5f);
-    }
-    //==================================================================================================================================
-    private void OnDrawGizmos()
-    {
-        Gizmos.DrawWireSphere(transform.position, searchRadius);
-        var cols = Physics.OverlapSphere(transform.position, searchRadius, targetMask);
-        Gizmos.color = cols.Length == 0 ? Color.red : Color.green;
+        //==================================================================================================================================
+        private void OnValidate()
+        {
+            if (searchRadius <= 0f)
+            {
+                Debug.LogWarning("Search radius must be greater than 0!", this);
+                searchRadius = 1f;
+            }
+
+            if (evaluateTargetInterval <= 0f)
+            {
+                Debug.LogWarning("Evaluate target interval must be greater than 0!", this);
+                evaluateTargetInterval = 0.1f;
+            }
+        }
     }
 }

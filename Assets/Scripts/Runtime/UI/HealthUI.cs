@@ -9,7 +9,7 @@ public class HealthUI : MonoBehaviour
     private Color zeroHealth = Color.red;
     void Update()
     {
-        var healthPercent = enemyHealth.GetHealthPercentage() / 100;
+        var healthPercent = enemyHealth.HealthPercentage / 100;
         image.fillAmount = healthPercent;
         image.color = Color.Lerp(zeroHealth, fullHealth, healthPercent);
     }

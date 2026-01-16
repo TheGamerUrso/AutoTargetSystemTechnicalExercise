@@ -1,93 +1,112 @@
 using UnityEngine;
 
+/// <summary>
+/// Projectile that uses strategy patterns for movement and damage.
+/// Refactored to follow Open/Closed Principle - extensible without modification.
+/// </summary>
 public class Projectile : MonoBehaviour
 {
     [Header("Configuration")]
     [SerializeField] private ProjectileSO projectileData;
-    private Rigidbody rigid;
-    private Vector3 currentTargetPos;
+
+    private IProjectileMovementStrategy movementStrategy;
+    private IDamageDealer damageDealer;
+    private Vector3 targetPosition;
+
     //==================================================================================================================================
     private void Awake()
     {
-        rigid = GetComponent<Rigidbody>();
-        if(rigid == null )
+        if (projectileData == null)
         {
-            Debug.LogWarning("Rigidbody component is missing.",gameObject);
+            Debug.LogError("ProjectileSO is not assigned!", this);
+            Destroy(gameObject);
+            return;
         }
+
+        // Initialize strategies based on configuration
+        InitializeStrategies();
     }
+
     //==================================================================================================================================
-    private void Update() => Move();
-    //==================================================================================================================================
-    // Move projectile
-    public void Move()
+    private void Update()
     {
-        Debug.DrawRay(transform.position, currentTargetPos - transform.position , Color.yellow);
-
-        // AOE projectile move toward target position
-        if (!projectileData.IsAOE)
+        if (movementStrategy != null)
         {
-            // Non-AOE projectile move forward
-            transform.position += transform.forward *
-                   projectileData.Speed * Time.deltaTime;
+            movementStrategy.Move(transform, targetPosition, projectileData.Speed, Time.deltaTime);
 
-            // Destroy if out of screen bounds
-            var worldToScreenPoint = Camera.main.WorldToScreenPoint(transform.position);
-            if (worldToScreenPoint.x <= 0 || worldToScreenPoint.y <= 0 || worldToScreenPoint.x >= Screen.width || worldToScreenPoint.y >= Screen.height)
+            // Check if reached target (for homing projectiles)
+            if (movementStrategy.HasReachedTarget(transform.position, targetPosition))
             {
+                Explode();
                 Destroy(gameObject);
             }
         }
-
-        // Check if reached target position
-        if (Vector3.Distance(transform.position, currentTargetPos) < 0.1f)
-        {
-            Explode();
-        }
     }
+
     //==================================================================================================================================
     private void OnTriggerEnter(Collider other)
     {
-        if (other.CompareTag("Player")) return;
+        // Skip player collisions
+        if (other.CompareTag("Player"))
+            return;
 
-        // Deal damage to damagable objects
-        var damagable = other.transform.GetComponentInParent<IDamagable>();
-        if (damagable != null)
+        // Deal damage based on strategy
+        if (damageDealer != null)
         {
-            damagable.TakeDamage(10f);
+            damageDealer.DealDamage(transform.position, projectileData.Damage, other);
         }
-        // Explode on impact if configured
-        if (projectileData.IsAOE)
-        {
-            DoAOEDamage();
-        }
-        //Destroy projectile
+
+        // Explode and destroy
         Explode();
         Destroy(gameObject);
     }
+
     //==================================================================================================================================
-    // Set target position for AOE projectiles
+    /// <summary>
+    /// Initialize movement and damage strategies based on projectile configuration.
+    /// </summary>
+    private void InitializeStrategies()
+    {
+        // Select movement strategy
+        if (projectileData.IsAOE)
+        {
+            movementStrategy = new HomingMovementStrategy();
+            damageDealer = new AOEDamageDealer(projectileData.AOERadius);
+        }
+        else
+        {
+            movementStrategy = new ForwardMovementStrategy();
+            damageDealer = new SingleTargetDamageDealer();
+        }
+    }
+
+    //==================================================================================================================================
+    /// <summary>
+    /// Set the target position for the projectile.
+    /// </summary>
+    /// <param name="target">Target transform.</param>
     public void SetTargetPos(Transform target)
     {
-        currentTargetPos = new Vector3(target.transform.position.x, target.transform.position.y, target.transform.position.z);
-    }
-    //==================================================================================================================================
-    // Instantiate explosion effect
-    public void Explode()
-    {
-        Instantiate(projectileData.ExplosionFX, transform.position, transform.rotation);
-    }
-    //==================================================================================================================================
-    // Deal AOE damage
-    public void DoAOEDamage()
-    {
-        var col = Physics.OverlapSphere(transform.position, projectileData.AOERadius);
-        foreach (var hit in col)
+        if (target != null)
         {
-            var damagable = hit.transform.GetComponentInParent<IDamagable>();
-            if (damagable != null)
-            {
-                damagable.TakeDamage(10f);
-            }
+            targetPosition = target.position;
+        }
+        else
+        {
+            // Fallback: shoot forward
+            targetPosition = transform.position + transform.forward * 100f;
+        }
+    }
+
+    //==================================================================================================================================
+    /// <summary>
+    /// Instantiate explosion effect at current position.
+    /// </summary>
+    private void Explode()
+    {
+        if (projectileData.ExplosionFX != null)
+        {
+            Instantiate(projectileData.ExplosionFX, transform.position, transform.rotation);
         }
     }
 }

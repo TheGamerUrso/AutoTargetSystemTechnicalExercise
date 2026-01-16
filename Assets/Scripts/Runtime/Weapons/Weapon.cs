@@ -1,67 +1,97 @@
 using UnityEngine;
 
-// Weapon class to handle shooting projectiles
+/// <summary>
+/// Handles shooting projectiles at targets.
+/// Refactored to depend on ITargetProvider interface instead of concrete AutoTargetSystem.
+/// </summary>
 public class Weapon : MonoBehaviour
 {
-    private AutoTargetSystem autoTargetSystem;
-    // Weapon data scriptable object
-    public WeaponSO weaponData;
     [Header("Configuration")]
-    // Angle threshold to shoot
+    public WeaponSO weaponData;
+
     [SerializeField] private float angleThreshold = 30f;
-    // Fire point transform
     [SerializeField] private Transform attackPoint;
-    // Time until next fire
+
+    private ITargetProvider targetProvider;
+    private Transform currentTarget;
     private float nextFireTime = 0f;
-    // Target transform
-    private Transform target;
-    //==================================================================================================================================
-    private void OnDestroy()
-    {
-        if (autoTargetSystem != null)
-        {
-            // Unsubscribe from OnTargetAcquired event
-            autoTargetSystem.OnTargetAcquired -= SetTarget;
-        }
-    }
+
     //==================================================================================================================================
     private void Start()
     {
-        // Find AutoTargetSystem in scene
-        autoTargetSystem = GameObject.FindFirstObjectByType<AutoTargetSystem>();
-        if (autoTargetSystem == null)
+        // Get target provider from ServiceLocator (Dependency Inversion)
+        targetProvider = ServiceLocator.Get<ITargetProvider>();
+
+        if (targetProvider == null)
         {
-            Debug.LogWarning("AutoTargetSystem not found in scene.", gameObject);
+            Debug.LogWarning("ITargetProvider not found in ServiceLocator. Weapon will not function.", this);
         }
         else
         {
-            // Subscribe to OnTargetAcquired event
-            autoTargetSystem.OnTargetAcquired += SetTarget;
+            // Subscribe to target changes
+            targetProvider.OnTargetChanged += OnTargetChanged;
         }
     }
+
     //==================================================================================================================================
-    public void Update()
+    private void OnDestroy()
     {
-        if (Time.time >= nextFireTime)
+        // Unsubscribe from events
+        if (targetProvider != null)
         {
-            if (target == null) return;
+            targetProvider.OnTargetChanged -= OnTargetChanged;
+        }
+    }
+
+    //==================================================================================================================================
+    private void Update()
+    {
+        if (Time.time >= nextFireTime && currentTarget != null)
+        {
             Shoot();
             nextFireTime = Time.time + weaponData.FireRate;
         }
     }
+
     //==================================================================================================================================
-    // Attack method to shoot at target
-    public void SetTarget(Transform target)
+    private void OnValidate()
     {
-        this.target = target;
+        // Validate configuration in editor
+        if (weaponData != null && weaponData.ProjectilePrefab == null)
+        {
+            Debug.LogWarning($"WeaponSO '{weaponData.name}' is missing ProjectilePrefab!", this);
+        }
+
+        if (attackPoint == null)
+        {
+            Debug.LogWarning("Attack point is not assigned!", this);
+        }
     }
+
     //==================================================================================================================================
-    // Shoot method to instantiate projectile
-    public void Shoot()
+    /// <summary>
+    /// Called when the target changes.
+    /// </summary>
+    private void OnTargetChanged(Transform newTarget)
     {
-        var projectileTemp = Instantiate(weaponData.ProjectilePrefab,
-                   attackPoint.position,
-                   attackPoint.rotation);
-        projectileTemp.SetTargetPos(target);
+        currentTarget = newTarget;
+    }
+
+    //==================================================================================================================================
+    /// <summary>
+    /// Instantiate and fire a projectile at the current target.
+    /// </summary>
+    private void Shoot()
+    {
+        if (weaponData == null || weaponData.ProjectilePrefab == null || attackPoint == null)
+            return;
+
+        var projectile = Instantiate(
+            weaponData.ProjectilePrefab,
+            attackPoint.position,
+            attackPoint.rotation
+        );
+
+        projectile.SetTargetPos(currentTarget);
     }
 }

@@ -1,17 +1,22 @@
 using UnityEngine;
 
+/// <summary>
+/// Configuration data for projectiles.
+/// </summary>
 [CreateAssetMenu(fileName = "New Projectile Data", menuName = "Data/New Projectile Data")]
-public class ProjectileSO :ScriptableObject
+public class ProjectileSO : ScriptableObject
 {
-    [Header("Configuration")]
-    // Projectile speed
+    [Header("Movement")]
     public float Speed = 30f;
-    // Explosion effect prefab
+
+    [Header("Damage")]
+    public float Damage = 10f;
+
+    [Header("Effects")]
     public GameObject ExplosionFX;
-    // Should the projectile explode on impact
     public bool ExplodeOnImpact = true;
-    // Is Area of Effect projectile
+
+    [Header("Area of Effect")]
     public bool IsAOE = false;
-    // Area of Effect radius
     public float AOERadius = 5f;
 }
