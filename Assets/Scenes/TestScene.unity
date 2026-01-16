@@ -220,6 +220,10 @@ PrefabInstance:
       value: Enemy (1)
       objectReference: {fileID: 0}
     - target: {fileID: 1550681273297688940, guid: 0688bf10071039840877fed76fd5bcf1, type: 3}
+      propertyPath: m_Layer
+      value: 6
+      objectReference: {fileID: 0}
+    - target: {fileID: 1550681273297688940, guid: 0688bf10071039840877fed76fd5bcf1, type: 3}
       propertyPath: m_IsActive
       value: 1
       objectReference: {fileID: 0}
@@ -480,6 +484,10 @@ PrefabInstance:
     - target: {fileID: 1550681273297688940, guid: 0688bf10071039840877fed76fd5bcf1, type: 3}
       propertyPath: m_Name
       value: Enemy (8)
+      objectReference: {fileID: 0}
+    - target: {fileID: 1550681273297688940, guid: 0688bf10071039840877fed76fd5bcf1, type: 3}
+      propertyPath: m_Layer
+      value: 6
       objectReference: {fileID: 0}
     - target: {fileID: 4166208096407941614, guid: 0688bf10071039840877fed76fd5bcf1, type: 3}
       propertyPath: m_Layer
@@ -930,6 +938,10 @@ PrefabInstance:
     - target: {fileID: 1550681273297688940, guid: 0688bf10071039840877fed76fd5bcf1, type: 3}
       propertyPath: m_Name
       value: Enemy (2)
+      objectReference: {fileID: 0}
+    - target: {fileID: 1550681273297688940, guid: 0688bf10071039840877fed76fd5bcf1, type: 3}
+      propertyPath: m_Layer
+      value: 6
       objectReference: {fileID: 0}
     - target: {fileID: 1550681273297688940, guid: 0688bf10071039840877fed76fd5bcf1, type: 3}
       propertyPath: m_IsActive
@@ -2106,9 +2118,11 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 64
   priorityRules:
-  - {fileID: 11400000, guid: 489e2a1f6ca6408408a977d52db3fd3b, type: 2}
   - {fileID: 11400000, guid: 75d4b1ded8d892249a4c67af14ff7b85, type: 2}
+  - {fileID: 11400000, guid: 489e2a1f6ca6408408a977d52db3fd3b, type: 2}
   evaluateTargetInterval: 0.15
+  useTargetRetention: 1
+  retentionThreshold: 2
 --- !u!120 &1934791290
 LineRenderer:
   serializedVersion: 3
@@ -2228,9 +2242,10 @@ MonoBehaviour:
   m_GameObject: {fileID: 1934791287}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 55018c8bae84c7a4e9631777a6b0ce93, type: 3}
+  m_Script: {fileID: 11500000, guid: e344c4f4a6cca1f4697ca91f1fe158c9, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerRotationController
+  rotationSpeed: 5
 --- !u!1001 &1943649860
 PrefabInstance:
   m_ObjectHideFlags: 0
